@@ -99,8 +99,10 @@ class TeamsUserEnumerator:
       if len(user_profile) > 0 and isinstance(user_profile, list):
          user['exists'] = True
          if presence and "mri" in user_profile[0]:
+            print("etsjflsdjfsdjl")
             mri = user_profile[0].get('mri')
             presence = self.check_teams_presence(mri)
+            print(presence)
             user['presence'] = presence
          result_stdout = "%s - %s" % (email, user.get('info')[0].get('displayName'))
          result_stdout += "" if not presence else " (%s, %s)" % (user.get('presence')[0].get('presence').get('availability'), user.get('presence')[0].get('presence').get('deviceType'))
@@ -183,21 +185,33 @@ class TeamsUserEnumerator:
          Presence data structure (dict): Structure containing presence information about the targeted user
       """
       headers = {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + self.bearertoken,
+         "Content-Type": "application/json",
+         "Authorization": "Bearer " + self.bearertoken
       }
 
-      payload = [{"mri":mri}]
+      payload = [{"mri": mri,"source":"ups"}]
 
-      content = requests.post("https://presence.teams.microsoft.com/v1/presence/getpresence/", headers=headers, json=payload)
+      try:
+         # Make the request without following redirects
+         response = requests.post(
+            "https://noam.presence.teams.microsoft.com/v1/presence/getpresence/", 
+            headers=headers, 
+            json=payload, 
+            allow_redirects=False
+         )
+       
+         if response.status_code != 200:
+            print(f"Error: {response.status_code}")
+            return None
 
-      if content.status_code != 200:
-         p_warn("Error: %d" % (content.status_code))
-         return
+         # Parse JSON response if no redirect
+         json_content = response.json()
+         return json_content
 
-      json_content = json.loads(content.text)
-      return json_content
-
+      except requests.exceptions.RequestException as e:
+         print(f"Request failed: {e}")
+         return None
+    
    def check_live_presence(self, mri):
       """
       Checks the presence of a user, using the live.com endpoint
