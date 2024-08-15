@@ -99,10 +99,8 @@ class TeamsUserEnumerator:
       if len(user_profile) > 0 and isinstance(user_profile, list):
          user['exists'] = True
          if presence and "mri" in user_profile[0]:
-            print("etsjflsdjfsdjl")
             mri = user_profile[0].get('mri')
             presence = self.check_teams_presence(mri)
-            print(presence)
             user['presence'] = presence
          result_stdout = "%s - %s" % (email, user.get('info')[0].get('displayName'))
          result_stdout += "" if not presence else " (%s, %s)" % (user.get('presence')[0].get('presence').get('availability'), user.get('presence')[0].get('presence').get('deviceType'))
